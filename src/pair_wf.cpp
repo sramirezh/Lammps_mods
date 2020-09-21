@@ -257,29 +257,6 @@ double PairWF::init_one(int i, int j)
   r0m[j][i] = r0m[i][j];
   offset[j][i] = offset[i][j];
 
-  // compute I,J contribution to long-range tail correction
-  // count total # of atoms of type I and J via Allreduce
-
-//  if (tail_flag) {
-//    int *type = atom->type;
-//    int nlocal = atom->nlocal;
-
-//    double count[2],all[2];
-//    count[0] = count[1] = 0.0;
-//    for (int k = 0; k < nlocal; k++) {
-//      if (type[k] == i) count[0] += 1.0;
-//      if (type[k] == j) count[1] += 1.0;
-//    }
-//    MPI_Allreduce(count,all,2,MPI_DOUBLE,MPI_SUM,world);
-
-//    double cut3 = cut[i][j]*cut[i][j]*cut[i][j];
-//    ptail_ij = 2.*MY_PI/3.*all[0]*all[1]*e0nm[i][j]*nm[i][j]*cut3 *
-//      (pow(sigma[i][j]/cut[i][j],nn[i][j])/(nn[i][j]-3) - pow(sigma[i][j]/cut[i][j],mu[i][j])/(mu[i][j]-3));
-//    etail_ij = 2.*MY_PI*all[0]*all[1]*e0nm[i][j]*cut3 *
-//      (mu[i][j]*pow(sigma[i][j]/cut[i][j],nn[i][j])/(nn[i][j]-3) - nn[i][j]*pow(sigma[i][j]/cut[i][j],mu[i][j])/(mu[i][j]-3));
-
-  //}
-
   return cut[i][j];
 }
 
