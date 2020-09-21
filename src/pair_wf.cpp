@@ -50,7 +50,7 @@ PairWF::~PairWF()
     memory->destroy(epsilon);
     memory->destroy(r0);
     memory->destroy(nu);
-    memory->destroy(mm);
+    memory->destroy(mu);
     memory->destroy(nm);
     memory->destroy(e0nm);
     memory->destroy(rcm);
@@ -110,13 +110,13 @@ void PairWF::compute(int eflag, int vflag)
       if (rsq < cutsq[itype][jtype]) {
         r2inv = 1.0/rsq;
         r = sqrt(rsq);
-        rminv = power(r2inv,mm[itype][jtype])
+        rminv = power(r2inv,mu[itype][jtype])
         rm = r0m[itype][jtype]*rminv - 1.0;
         rn = rcm[itype][jtype]*rminv - 1.0;
 
-        forcenm = 2.0*mm[itype][jtype] *r0m[itype][jtype]*power(rn,2.0*nu[itype][jtype])
+        forcenm = 2.0*mu[itype][jtype] *r0m[itype][jtype]*power(rn,2.0*nu[itype][jtype])
                 + 4.0*nm[itype][jtype] *rcm[itype][jtype]*rm*power(rn,2.0*nu[itype][jtype]-1.0);
-        fpair = factor_lj*e0mn[itype][jtype]*forcenm*power(r2inv,mm[itype][jtype]+1.0);
+        fpair = factor_lj*e0mn[itype][jtype]*forcenm*power(r2inv,mu[itype][jtype]+1.0);
 
         f[i][0] += delx*fpair;
         f[i][1] += dely*fpair;
@@ -162,7 +162,7 @@ void PairWF::allocate()
   memory->create(epsilon,n+1,n+1,"pair:epsilon");
   memory->create(r0,n+1,n+1,"pair:r0");
   memory->create(nu,n+1,n+1,"pair:nu");
-  memory->create(mm,n+1,n+1,"pair:mm");
+  memory->create(mu,n+1,n+1,"pair:mu");
   memory->create(nm,n+1,n+1,"pair:nm");
   memory->create(e0nm,n+1,n+1,"pair:e0nm");
   memory->create(rcm,n+1,n+1,"pair:rcm");
@@ -207,7 +207,7 @@ void PairWF::coeff(int narg, char **arg)
   double epsilon_one = force->numeric(FLERR,arg[2]);
   double r0_one = force->numeric(FLERR,arg[3]);
   double nu_one = force->numeric(FLERR,arg[4]);
-  double mm_one = force->numeric(FLERR,arg[5]);
+  double mu_one = force->numeric(FLERR,arg[5]);
 
   double cut_one = cut_global;
   if (narg == 7) cut_one = force->numeric(FLERR,arg[6]);
@@ -218,7 +218,7 @@ void PairWF::coeff(int narg, char **arg)
       epsilon[i][j] = epsilon_one;
       r0[i][j] = r0_one;
       nu[i][j] = nu_one;
-      mm[i][j] = mm_one;
+      mu[i][j] = mu_one;
       cut[i][j] = cut_one;
       setflag[i][j] = 1;
       count++;
@@ -236,12 +236,12 @@ double PairWF::init_one(int i, int j)
 {
   if (setflag[i][j] == 0) error->all(FLERR,"All pair coeffs are not set");
 
-  nm[i][j] = nu[i][j]*mm[i][j];
-  e0nm[i][j] = epsilon[i][j]*2.0*nu[i][j]*power(cut[i][j]/r0[i][j],2.0*mm[i][j])
-                       *power((1+2.0*nu[i][j])/(2.0*nu[i][j])/(power(cut[i][j]/r0[i,j],2.0*mm[i][j])-1.0),
+  nm[i][j] = nu[i][j]*mu[i][j];
+  e0nm[i][j] = epsilon[i][j]*2.0*nu[i][j]*power(cut[i][j]/r0[i][j],2.0*mu[i][j])
+                       *power((1+2.0*nu[i][j])/(2.0*nu[i][j])/(power(cut[i][j]/r0[i,j],2.0*mu[i][j])-1.0),
                               2.0*nu[i][j]+1.0);
-  rcm[i][j] = pow(cut[i][j],2.0*mm[i][j]);
-  r0m[i][j] = pow(r0[i][j], 2.0*mm[i][j]);
+  rcm[i][j] = pow(cut[i][j],2.0*mu[i][j]);
+  r0m[i][j] = pow(r0[i][j], 2.0*mu[i][j]);
 
   if (offset_flag && (cut[i][j] > 0.0)) {
     offset[i][j] = 0.0;
@@ -249,7 +249,7 @@ double PairWF::init_one(int i, int j)
 
   epsilon[j][i] = epsilon[i][j];
   nu[j][i] = nu[i][j];
-  mm[j][i] = mm[i][j];
+  mu[j][i] = mu[i][j];
   nm[j][i] = nm[i][j];
   r0[j][i] = r0[i][j];
   e0nm[j][i] = e0nm[i][j];
@@ -274,9 +274,9 @@ double PairWF::init_one(int i, int j)
 
 //    double cut3 = cut[i][j]*cut[i][j]*cut[i][j];
 //    ptail_ij = 2.*MY_PI/3.*all[0]*all[1]*e0nm[i][j]*nm[i][j]*cut3 *
-//      (pow(r0[i][j]/cut[i][j],nn[i][j])/(nn[i][j]-3) - pow(r0[i][j]/cut[i][j],mm[i][j])/(mm[i][j]-3));
+//      (pow(r0[i][j]/cut[i][j],nn[i][j])/(nn[i][j]-3) - pow(r0[i][j]/cut[i][j],mu[i][j])/(mu[i][j]-3));
 //    etail_ij = 2.*MY_PI*all[0]*all[1]*e0nm[i][j]*cut3 *
-//      (mm[i][j]*pow(r0[i][j]/cut[i][j],nn[i][j])/(nn[i][j]-3) - nn[i][j]*pow(r0[i][j]/cut[i][j],mm[i][j])/(mm[i][j]-3));
+//      (mu[i][j]*pow(r0[i][j]/cut[i][j],nn[i][j])/(nn[i][j]-3) - nn[i][j]*pow(r0[i][j]/cut[i][j],mu[i][j])/(mu[i][j]-3));
 
   }
 
@@ -299,7 +299,7 @@ void PairWF::write_restart(FILE *fp)
         fwrite(&epsilon[i][j],sizeof(double),1,fp);
         fwrite(&r0[i][j],sizeof(double),1,fp);
         fwrite(&nu[i][j],sizeof(double),1,fp);
-        fwrite(&mm[i][j],sizeof(double),1,fp);
+        fwrite(&mu[i][j],sizeof(double),1,fp);
         fwrite(&cut[i][j],sizeof(double),1,fp);
       }
     }
@@ -325,13 +325,13 @@ void PairWF::read_restart(FILE *fp)
           fread(&epsilon[i][j],sizeof(double),1,fp);
           fread(&r0[i][j],sizeof(double),1,fp);
           fread(&nu[i][j],sizeof(double),1,fp);
-          fread(&mm[i][j],sizeof(double),1,fp);
+          fread(&mu[i][j],sizeof(double),1,fp);
           fread(&cut[i][j],sizeof(double),1,fp);
         }
         MPI_Bcast(&epsilon[i][j],1,MPI_DOUBLE,0,world);
         MPI_Bcast(&r0[i][j],1,MPI_DOUBLE,0,world);
         MPI_Bcast(&nu[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&mm[i][j],1,MPI_DOUBLE,0,world);
+        MPI_Bcast(&mu[i][j],1,MPI_DOUBLE,0,world);
         MPI_Bcast(&cut[i][j],1,MPI_DOUBLE,0,world);
       }
     }
@@ -374,7 +374,7 @@ void PairWF::read_restart_settings(FILE *fp)
 void PairWF::write_data(FILE *fp)
 {
   for (int i = 1; i <= atom->ntypes; i++)
-    fprintf(fp,"%d %g %g %g %g\n",i,epsilon[i][i],r0[i][i],nu[i][i],mm[i][i]);
+    fprintf(fp,"%d %g %g %g %g\n",i,epsilon[i][i],r0[i][i],nu[i][i],mu[i][i]);
 }
 
 /* ----------------------------------------------------------------------
@@ -386,7 +386,7 @@ void PairWF::write_data_all(FILE *fp)
   for (int i = 1; i <= atom->ntypes; i++)
     for (int j = i; j <= atom->ntypes; j++)
       fprintf(fp,"%d %d %g %g %g %g %g\n",i,j,
-              epsilon[i][j],r0[i][j],nu[i][j],mm[i][j],cut[i][j]);
+              epsilon[i][j],r0[i][j],nu[i][j],mu[i][j],cut[i][j]);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -402,12 +402,12 @@ double PairWF::single(int /*i*/, int /*j*/, int itype, int jtype,
    
   r2inv = 1.0/rsq;
   r = sqrt(rsq);
-  rminv=power(r2inv,mm[itype][jtype])
+  rminv=power(r2inv,mu[itype][jtype])
   rm = r0m[itype][jtype]*rminv - 1.0;
   rn = rcm[itype][jtype]*rminv - 1.0;
-  forcenm = 2.0*mm[itype][jtype] *r0m[itype][jtype]*power(rn,2.0*nu[itype][jtype])
+  forcenm = 2.0*mu[itype][jtype] *r0m[itype][jtype]*power(rn,2.0*nu[itype][jtype])
                 + 4.0*nm[itype][jtype] *rcm[itype][jtype]*rm*power(rn,2.0*nu[itype][jtype]-1.0);
-  fforce = factor_lj*e0mn[itype][jtype]*forcenm*power(r2inv,mm[itype][jtype]+1.0);
+  fforce = factor_lj*e0mn[itype][jtype]*forcenm*power(r2inv,mu[itype][jtype]+1.0);
 
   phinm = e0nm[itype][jtype] * rm*power(rn,2.0*nu[itype][jtype]) -
     offset[itype][jtype];
@@ -422,6 +422,6 @@ void *PairWF::extract(const char *str, int &dim)
   if (strcmp(str,"epsilon") == 0) return (void *) epsilon;
   if (strcmp(str,"r0") == 0) return (void *) r0;
   if (strcmp(str,"nu") == 0) return (void *) nu;
-  if (strcmp(str,"mm") == 0) return (void *) mm;
+  if (strcmp(str,"mu") == 0) return (void *) mu;
   return NULL;
 }
