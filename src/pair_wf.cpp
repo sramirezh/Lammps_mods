@@ -110,13 +110,13 @@ void PairWF::compute(int eflag, int vflag)
       if (rsq < cutsq[itype][jtype]) {
         r2inv = 1.0/rsq;
         r = sqrt(rsq);
-        rminv = power(r2inv,mu[itype][jtype])
+        rminv = pow(r2inv,mu[itype][jtype])
         rm = r0m[itype][jtype]*rminv - 1.0;
         rn = rcm[itype][jtype]*rminv - 1.0;
 
-        forcenm = 2.0*mu[itype][jtype] *r0m[itype][jtype]*power(rn,2.0*nu[itype][jtype])
-                + 4.0*nm[itype][jtype] *rcm[itype][jtype]*rm*power(rn,2.0*nu[itype][jtype]-1.0);
-        fpair = factor_lj*e0mn[itype][jtype]*forcenm*power(r2inv,mu[itype][jtype]+1.0);
+        forcenm = 2.0*mu[itype][jtype] *r0m[itype][jtype]*pow(rn,2.0*nu[itype][jtype])
+                + 4.0*nm[itype][jtype] *rcm[itype][jtype]*rm*pow(rn,2.0*nu[itype][jtype]-1.0);
+        fpair = factor_lj*e0mn[itype][jtype]*forcenm*pow(r2inv,mu[itype][jtype]+1.0);
 
         f[i][0] += delx*fpair;
         f[i][1] += dely*fpair;
@@ -129,7 +129,7 @@ void PairWF::compute(int eflag, int vflag)
 
         if (eflag) {
           evdwl = e0nm[itype][jtype] *
-            (rm*power(rn,2.0*nu[itype][jtype])) - offset[itype][jtype];
+            (rm*pow(rn,2.0*nu[itype][jtype])) - offset[itype][jtype];
           evdwl *= factor_lj;
         }
 
@@ -237,8 +237,8 @@ double PairWF::init_one(int i, int j)
   if (setflag[i][j] == 0) error->all(FLERR,"All pair coeffs are not set");
 
   nm[i][j] = nu[i][j]*mu[i][j];
-  e0nm[i][j] = epsilon[i][j]*2.0*nu[i][j]*power(cut[i][j]/r0[i][j],2.0*mu[i][j])
-                       *power((1+2.0*nu[i][j])/(2.0*nu[i][j])/(power(cut[i][j]/r0[i,j],2.0*mu[i][j])-1.0),
+  e0nm[i][j] = epsilon[i][j]*2.0*nu[i][j]*pow(cut[i][j]/r0[i][j],2.0*mu[i][j])
+                       *pow((1+2.0*nu[i][j])/(2.0*nu[i][j])/(pow(cut[i][j]/r0[i,j],2.0*mu[i][j])-1.0),
                               2.0*nu[i][j]+1.0);
   rcm[i][j] = pow(cut[i][j],2.0*mu[i][j]);
   r0m[i][j] = pow(r0[i][j], 2.0*mu[i][j]);
@@ -278,7 +278,7 @@ double PairWF::init_one(int i, int j)
 //    etail_ij = 2.*MY_PI*all[0]*all[1]*e0nm[i][j]*cut3 *
 //      (mu[i][j]*pow(r0[i][j]/cut[i][j],nn[i][j])/(nn[i][j]-3) - nn[i][j]*pow(r0[i][j]/cut[i][j],mu[i][j])/(mu[i][j]-3));
 
-  }
+  //}
 
   return cut[i][j];
 }
@@ -402,14 +402,14 @@ double PairWF::single(int /*i*/, int /*j*/, int itype, int jtype,
    
   r2inv = 1.0/rsq;
   r = sqrt(rsq);
-  rminv=power(r2inv,mu[itype][jtype])
+  rminv=pow(r2inv,mu[itype][jtype])
   rm = r0m[itype][jtype]*rminv - 1.0;
   rn = rcm[itype][jtype]*rminv - 1.0;
-  forcenm = 2.0*mu[itype][jtype] *r0m[itype][jtype]*power(rn,2.0*nu[itype][jtype])
-                + 4.0*nm[itype][jtype] *rcm[itype][jtype]*rm*power(rn,2.0*nu[itype][jtype]-1.0);
-  fforce = factor_lj*e0mn[itype][jtype]*forcenm*power(r2inv,mu[itype][jtype]+1.0);
+  forcenm = 2.0*mu[itype][jtype] *r0m[itype][jtype]*pow(rn,2.0*nu[itype][jtype])
+                + 4.0*nm[itype][jtype] *rcm[itype][jtype]*rm*pow(rn,2.0*nu[itype][jtype]-1.0);
+  fforce = factor_lj*e0mn[itype][jtype]*forcenm*pow(r2inv,mu[itype][jtype]+1.0);
 
-  phinm = e0nm[itype][jtype] * rm*power(rn,2.0*nu[itype][jtype]) -
+  phinm = e0nm[itype][jtype] * rm*pow(rn,2.0*nu[itype][jtype]) -
     offset[itype][jtype];
   return factor_lj*phinm;
 }
