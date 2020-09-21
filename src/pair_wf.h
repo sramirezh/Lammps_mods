@@ -24,7 +24,7 @@ PairStyle(wf,PairWF)
 
 namespace LAMMPS_NS {
 
-class PairWFCut : public Pair {
+class PairWF : public Pair {
  public:
   PairWF(class LAMMPS *);
   virtual ~PairWF();
@@ -45,7 +45,7 @@ class PairWFCut : public Pair {
  protected:
   double cut_global;
   double **cut;
-  double **e0,**r0,**nn, **mm;
+  double **epsilon,**r0,**nu, **mu;
   double **nm,**e0nm,**rcm,**r0m,**offset;
 
   void allocate();
