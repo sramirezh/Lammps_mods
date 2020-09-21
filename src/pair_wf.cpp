@@ -48,7 +48,7 @@ PairWF::~PairWF()
 
     memory->destroy(cut);
     memory->destroy(epsilon);
-    memory->destroy(r0);
+    memory->destroy(sigma);
     memory->destroy(nu);
     memory->destroy(mu);
     memory->destroy(nm);
@@ -160,7 +160,7 @@ void PairWF::allocate()
 
   memory->create(cut,n+1,n+1,"pair:cut");
   memory->create(epsilon,n+1,n+1,"pair:epsilon");
-  memory->create(r0,n+1,n+1,"pair:r0");
+  memory->create(sigma,n+1,n+1,"pair:sigma");
   memory->create(nu,n+1,n+1,"pair:nu");
   memory->create(mu,n+1,n+1,"pair:mu");
   memory->create(nm,n+1,n+1,"pair:nm");
@@ -205,7 +205,7 @@ void PairWF::coeff(int narg, char **arg)
   force->bounds(FLERR,arg[1],atom->ntypes,jlo,jhi);
 
   double epsilon_one = force->numeric(FLERR,arg[2]);
-  double r0_one = force->numeric(FLERR,arg[3]);
+  double sigma_one = force->numeric(FLERR,arg[3]);
   double nu_one = force->numeric(FLERR,arg[4]);
   double mu_one = force->numeric(FLERR,arg[5]);
 
@@ -216,7 +216,7 @@ void PairWF::coeff(int narg, char **arg)
   for (int i = ilo; i <= ihi; i++) {
     for (int j = MAX(jlo,i); j <= jhi; j++) {
       epsilon[i][j] = epsilon_one;
-      r0[i][j] = r0_one;
+      sigma[i][j] = sigma_one;
       nu[i][j] = nu_one;
       mu[i][j] = mu_one;
       cut[i][j] = cut_one;
@@ -237,11 +237,11 @@ double PairWF::init_one(int i, int j)
   if (setflag[i][j] == 0) error->all(FLERR,"All pair coeffs are not set");
 
   nm[i][j] = nu[i][j]*mu[i][j];
-  e0nm[i][j] = epsilon[i][j]*2.0*nu[i][j]*pow(cut[i][j]/r0[i][j],2.0*mu[i][j])
-                       *pow((1+2.0*nu[i][j])/(2.0*nu[i][j])/(pow(cut[i][j]/r0[i][j],2.0*mu[i][j])-1.0),
+  e0nm[i][j] = epsilon[i][j]*2.0*nu[i][j]*pow(cut[i][j]/sigma[i][j],2.0*mu[i][j])
+                       *pow((1+2.0*nu[i][j])/(2.0*nu[i][j])/(pow(cut[i][j]/sigma[i][j],2.0*mu[i][j])-1.0),
                               2.0*nu[i][j]+1.0);
   rcm[i][j] = pow(cut[i][j],2.0*mu[i][j]);
-  r0m[i][j] = pow(r0[i][j], 2.0*mu[i][j]);
+  r0m[i][j] = pow(sigma[i][j], 2.0*mu[i][j]);
 
   if (offset_flag && (cut[i][j] > 0.0)) {
     offset[i][j] = 0.0;
@@ -251,7 +251,7 @@ double PairWF::init_one(int i, int j)
   nu[j][i] = nu[i][j];
   mu[j][i] = mu[i][j];
   nm[j][i] = nm[i][j];
-  r0[j][i] = r0[i][j];
+  sigma[j][i] = sigma[i][j];
   e0nm[j][i] = e0nm[i][j];
   rcm[j][i] = rcm[i][j];
   r0m[j][i] = r0m[i][j];
@@ -274,9 +274,9 @@ double PairWF::init_one(int i, int j)
 
 //    double cut3 = cut[i][j]*cut[i][j]*cut[i][j];
 //    ptail_ij = 2.*MY_PI/3.*all[0]*all[1]*e0nm[i][j]*nm[i][j]*cut3 *
-//      (pow(r0[i][j]/cut[i][j],nn[i][j])/(nn[i][j]-3) - pow(r0[i][j]/cut[i][j],mu[i][j])/(mu[i][j]-3));
+//      (pow(sigma[i][j]/cut[i][j],nn[i][j])/(nn[i][j]-3) - pow(sigma[i][j]/cut[i][j],mu[i][j])/(mu[i][j]-3));
 //    etail_ij = 2.*MY_PI*all[0]*all[1]*e0nm[i][j]*cut3 *
-//      (mu[i][j]*pow(r0[i][j]/cut[i][j],nn[i][j])/(nn[i][j]-3) - nn[i][j]*pow(r0[i][j]/cut[i][j],mu[i][j])/(mu[i][j]-3));
+//      (mu[i][j]*pow(sigma[i][j]/cut[i][j],nn[i][j])/(nn[i][j]-3) - nn[i][j]*pow(sigma[i][j]/cut[i][j],mu[i][j])/(mu[i][j]-3));
 
   //}
 
@@ -297,7 +297,7 @@ void PairWF::write_restart(FILE *fp)
       fwrite(&setflag[i][j],sizeof(int),1,fp);
       if (setflag[i][j]) {
         fwrite(&epsilon[i][j],sizeof(double),1,fp);
-        fwrite(&r0[i][j],sizeof(double),1,fp);
+        fwrite(&sigma[i][j],sizeof(double),1,fp);
         fwrite(&nu[i][j],sizeof(double),1,fp);
         fwrite(&mu[i][j],sizeof(double),1,fp);
         fwrite(&cut[i][j],sizeof(double),1,fp);
@@ -323,13 +323,13 @@ void PairWF::read_restart(FILE *fp)
       if (setflag[i][j]) {
         if (me == 0) {
           fread(&epsilon[i][j],sizeof(double),1,fp);
-          fread(&r0[i][j],sizeof(double),1,fp);
+          fread(&sigma[i][j],sizeof(double),1,fp);
           fread(&nu[i][j],sizeof(double),1,fp);
           fread(&mu[i][j],sizeof(double),1,fp);
           fread(&cut[i][j],sizeof(double),1,fp);
         }
         MPI_Bcast(&epsilon[i][j],1,MPI_DOUBLE,0,world);
-        MPI_Bcast(&r0[i][j],1,MPI_DOUBLE,0,world);
+        MPI_Bcast(&sigma[i][j],1,MPI_DOUBLE,0,world);
         MPI_Bcast(&nu[i][j],1,MPI_DOUBLE,0,world);
         MPI_Bcast(&mu[i][j],1,MPI_DOUBLE,0,world);
         MPI_Bcast(&cut[i][j],1,MPI_DOUBLE,0,world);
@@ -374,7 +374,7 @@ void PairWF::read_restart_settings(FILE *fp)
 void PairWF::write_data(FILE *fp)
 {
   for (int i = 1; i <= atom->ntypes; i++)
-    fprintf(fp,"%d %g %g %g %g\n",i,epsilon[i][i],r0[i][i],nu[i][i],mu[i][i]);
+    fprintf(fp,"%d %g %g %g %g\n",i,epsilon[i][i],sigma[i][i],nu[i][i],mu[i][i]);
 }
 
 /* ----------------------------------------------------------------------
@@ -386,7 +386,7 @@ void PairWF::write_data_all(FILE *fp)
   for (int i = 1; i <= atom->ntypes; i++)
     for (int j = i; j <= atom->ntypes; j++)
       fprintf(fp,"%d %d %g %g %g %g %g\n",i,j,
-              epsilon[i][j],r0[i][j],nu[i][j],mu[i][j],cut[i][j]);
+              epsilon[i][j],sigma[i][j],nu[i][j],mu[i][j],cut[i][j]);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -420,7 +420,7 @@ void *PairWF::extract(const char *str, int &dim)
 {
   dim = 2;
   if (strcmp(str,"epsilon") == 0) return (void *) epsilon;
-  if (strcmp(str,"r0") == 0) return (void *) r0;
+  if (strcmp(str,"sigma") == 0) return (void *) sigma;
   if (strcmp(str,"nu") == 0) return (void *) nu;
   if (strcmp(str,"mu") == 0) return (void *) mu;
   return NULL;
