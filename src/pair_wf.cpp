@@ -51,9 +51,9 @@ PairWF::~PairWF()
     memory->destroy(nu);
     memory->destroy(mu);
     memory->destroy(nm);
-    memory->destroy(e0nm);
+    memory->destroy(e0nm);  //Alpha * epsilon
     memory->destroy(rcmu);
-    memory->destroy(sigmamu);
+    memory->destroy(sigma_mu);
     memory->destroy(offset);
   }
 }
@@ -110,10 +110,10 @@ void PairWF::compute(int eflag, int vflag)
         r2inv = 1.0/rsq;
         r = sqrt(rsq);
         rminv = pow(r2inv,mu[itype][jtype]);
-        rm = sigmamu[itype][jtype]*rminv - 1.0;
+        rm = sigma_mu[itype][jtype]*rminv - 1.0;
         rn = rcmu[itype][jtype]*rminv - 1.0;
 
-        forcenm = 2.0*mu[itype][jtype] *sigmamu[itype][jtype]*pow(rn,2.0*nu[itype][jtype])
+        forcenm = 2.0*mu[itype][jtype] *sigma_mu[itype][jtype]*pow(rn,2.0*nu[itype][jtype])
                 + 4.0*nm[itype][jtype] *rcmu[itype][jtype]*rm*pow(rn,2.0*nu[itype][jtype]-1.0);
         fpair = factor_lj*e0nm[itype][jtype]*forcenm*pow(r2inv,mu[itype][jtype]+1.0);
 
@@ -165,7 +165,7 @@ void PairWF::allocate()
   memory->create(nm,n+1,n+1,"pair:nm");
   memory->create(e0nm,n+1,n+1,"pair:e0nm");
   memory->create(rcmu,n+1,n+1,"pair:rcmu");
-  memory->create(sigmamu,n+1,n+1,"pair:sigmamu");
+  memory->create(sigma_mu,n+1,n+1,"pair:sigma_mu");
   memory->create(offset,n+1,n+1,"pair:offset");
 }
 
@@ -240,7 +240,7 @@ double PairWF::init_one(int i, int j)
                        *pow((1+2.0*nu[i][j])/(2.0*nu[i][j])/(pow(cut[i][j]/sigma[i][j],2.0*mu[i][j])-1.0),
                               2.0*nu[i][j]+1.0);
   rcmu[i][j] = pow(cut[i][j],2.0*mu[i][j]);
-  sigmamu[i][j] = pow(sigma[i][j], 2.0*mu[i][j]);
+  sigma_mu[i][j] = pow(sigma[i][j], 2.0*mu[i][j]);
 
   if (offset_flag && (cut[i][j] > 0.0)) {
     offset[i][j] = 0.0;
@@ -253,7 +253,7 @@ double PairWF::init_one(int i, int j)
   sigma[j][i] = sigma[i][j];
   e0nm[j][i] = e0nm[i][j];
   rcmu[j][i] = rcmu[i][j];
-  sigmamu[j][i] = sigmamu[i][j];
+  sigma_mu[j][i] = sigma_mu[i][j];
   offset[j][i] = offset[i][j];
 
   return cut[i][j];
@@ -379,9 +379,9 @@ double PairWF::single(int /*i*/, int /*j*/, int itype, int jtype,
   r2inv = 1.0/rsq;
   r = sqrt(rsq);
   rminv = pow(r2inv,mu[itype][jtype]);
-  rm = sigmamu[itype][jtype]*rminv - 1.0;
+  rm = sigma_mu[itype][jtype]*rminv - 1.0;
   rn = rcmu[itype][jtype]*rminv - 1.0;
-  forcenm = 2.0*mu[itype][jtype] *sigmamu[itype][jtype]*pow(rn,2.0*nu[itype][jtype])
+  forcenm = 2.0*mu[itype][jtype] *sigma_mu[itype][jtype]*pow(rn,2.0*nu[itype][jtype])
                 + 4.0*nm[itype][jtype] *rcmu[itype][jtype]*rm*pow(rn,2.0*nu[itype][jtype]-1.0);
   fforce = factor_lj*e0nm[itype][jtype]*forcenm*pow(r2inv,mu[itype][jtype]+1.0);
 

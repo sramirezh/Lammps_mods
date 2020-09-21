@@ -46,7 +46,7 @@ class PairWF : public Pair {
   double cut_global;
   double **cut;
   double **epsilon,**sigma,**nu, **mu;
-  double **nm,**e0nm,**rcmu,**simgamu,**offset;
+  double **nm,**e0nm,**rcmu,**sigma_mu,**offset;
 
   void allocate();
 };
